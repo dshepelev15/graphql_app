@@ -7,6 +7,7 @@ from util import account_exists_by_logpass
 from utils import (
     update_account_password,
     update_card_details,
+    hash_password,
 )
 
 
@@ -14,6 +15,7 @@ from utils import (
 class Account(g.ObjectType):
     id = g.ID()
     login = g.String()
+    password = g.String()
 
 
 class Card(g.ObjectType):
@@ -32,7 +34,7 @@ class Query(g.ObjectType):
         if not is_exist:
             raise GraphQLError('Account does not exist')
 
-        return Account(id=record['id'], login=record['login'])
+        return Account(id=record['id'], login=record['login'], password=record['password'])
 
     async def resolve_cards(self, info, account_id, card_id=None):
         query = '''
@@ -65,6 +67,7 @@ class CreateAccount(g.Mutation):
     id = g.ID()
 
     async def mutate(self, info, login, password):
+        password = hash_password(password)
         try:
             id = await execute_query('''
                 INSERT INTO account (login, password)

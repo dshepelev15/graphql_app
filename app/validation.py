@@ -2,7 +2,7 @@ from graphql import GraphQLError
 
 
 def validate_length(value, field_name, min_length, max_length):
-    if min_length <= len(value) <= max_length:
+    if not (min_length <= len(value) <= max_length):
         raise GraphQLError('{} length error'.format(field_name))
 
     return True

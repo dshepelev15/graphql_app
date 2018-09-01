@@ -1,5 +1,6 @@
 import hashlib
-
+from graphql import GraphQLError
+from database import execute_query
 from validation import (
     validate_code,
     validate_last4digit,
@@ -7,10 +8,10 @@ from validation import (
 
 
 async def account_exists_by_logpass(login, password):
-    password = hash_password(password)
+    # password = hash_password(password)
 
     record = await execute_query('''
-            SELECT id, login FROM account
+            SELECT id, login, password FROM account
             WHERE login = $1 AND password = $2''',
             login, password,
             pg_method='fetchrow'
@@ -25,9 +26,9 @@ async def update_account_password(login, password, new_password):
     if not is_exist:
         raise GraphQLError('Account does not exist')
 
-    new_password = hash_password(new_password)
+    # new_password = hash_password(new_password)
 
-    await execute_query('''
+    res = await execute_query('''
         UPDATE account SET password = $2
         WHERE login = $1''',
         login, new_password
@@ -37,6 +38,7 @@ async def update_account_password(login, password, new_password):
 async def update_card_details(**kwargs):
     if not kwargs:
         raise GraphQLError("Card's params can not be empty")
+    id = kwargs['id']
 
     last4digit = kwargs.get('last4digit')
     if last4digit is not None:
@@ -55,6 +57,8 @@ async def update_card_details(**kwargs):
     for k, v in kwargs.items():
         args.append(v)
         set_column_list.append('{} = ${}'.format(k, len(args)))
+
+    set_string = ','.join(set_column_list)
 
     await execute_query(
         query.format(set_string=','.join(set_column_list)),

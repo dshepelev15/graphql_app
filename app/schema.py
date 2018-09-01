@@ -3,24 +3,28 @@ import graphene as g
 from graphql import GraphQLError
 
 from database import execute_query
-from validation import validate_login
+from validation import (
+    validate_login,
+    validate_last4digit,
+    validate_code,
+)
 from utils import (
     account_exists_by_logpass,
     update_account_password,
     update_card_details,
-    hash_password,
+    # hash_password,
 )
 
 
 ### QUERIES
 class Account(g.ObjectType):
-    id = g.ID()
+    id = g.Int()
     login = g.String()
     password = g.String()
 
 
 class Card(g.ObjectType):
-    id = g.ID()
+    id = g.Int()
     last4digit = g.String()
     code = g.String()
     type = g.String()
@@ -45,7 +49,7 @@ class Query(g.ObjectType):
         args = [account_id]
         unique_card = ''
         if card_id is not None:
-            unique_card = 'AND card_id = $2'
+            unique_card = 'AND id = $2'
             args.append(card_id)
 
         records = await execute_query(query.format(unique_card=unique_card),
@@ -65,11 +69,11 @@ class CreateAccount(g.Mutation):
         login = g.String(required=True)
         password = g.String(required=True)
 
-    id = g.ID()
+    id = g.Int()
 
     async def mutate(self, info, login, password):
         validate_login(login)
-        password = hash_password(password)
+        # password = hash_password(password)
         try:
             id = await execute_query('''
                 INSERT INTO account (login, password)
@@ -93,7 +97,7 @@ class UpdateAccountPassword(g.Mutation):
     success = g.Boolean()
 
     async def mutate(self, info, login, password, new_password):
-        update_account_password(login, password, new_password)
+        await update_account_password(login, password, new_password)
 
         return UpdateAccountPassword(success=True)
 
@@ -103,6 +107,7 @@ class DeleteAccount(g.Mutation):
         id = g.Int(required=True)
 
     success = g.Boolean()
+    id = g.Int()
 
     async def mutate(self, info, id):
         await execute_query('''
@@ -110,7 +115,7 @@ class DeleteAccount(g.Mutation):
             WHERE id = $1''',
             id)
 
-        return DeleteAccount(success=True)
+        return DeleteAccount(success=True, id=id)
 
 
 class CreateCard(g.Mutation):
@@ -120,10 +125,11 @@ class CreateCard(g.Mutation):
         code = g.String(required=True)
         type = g.String(required=True)
 
-    id = g.ID()
+    id = g.Int()
 
     async def mutate(self, info, account_id, last4digit, code, type):
-        validate_card_params(last4digit, code)
+        validate_last4digit(last4digit)
+        validate_code(code)
 
         row = await execute_query('''
             SELECT id FROM account
@@ -155,11 +161,12 @@ class UpdateCard(g.Mutation):
         type = g.String()
 
     success = g.Boolean()
+    id = g.Int()
 
     async def mutate(self, info, id, **kwargs):
-        update_card_details(id=id, **kwargs)
+        await update_card_details(id=id, **kwargs)
 
-        return UpdateCard(success=True)
+        return UpdateCard(success=True, id=id)
 
 
 class DeleteCard(g.Mutation):
@@ -167,6 +174,7 @@ class DeleteCard(g.Mutation):
         id = g.Int(required=True)
 
     success = g.Boolean()
+    id = g.Int()
 
     async def mutate(self, info, id):
         await execute_query('''
@@ -174,7 +182,7 @@ class DeleteCard(g.Mutation):
             WHERE id = $1''',
             id)
 
-        return DeleteCard(success=True)
+        return DeleteCard(success=True, id=id)
 
 
 # Inputs with all required True
@@ -198,9 +206,9 @@ class UpdateFullCard(g.Mutation):
 
     success = g.Boolean()
 
-    async def mutate(self, info, account, card):
-        update_account_password(account.login, account.password, account.new_password)
-        update_card_details(id=card.id, last4digit=card.last4digit, code=card.code, type=card.type)
+    async def mutate(self, info, account, card=None):
+        await update_account_password(account.login, account.password, account.new_password)
+        await update_card_details(id=card.id, last4digit=card.last4digit, code=card.code, type=card.type)
 
         return UpdateFullCard(success=True)
 

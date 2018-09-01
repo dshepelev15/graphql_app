@@ -3,8 +3,9 @@ import graphene as g
 from graphql import GraphQLError
 
 from database import execute_query
-from util import account_exists_by_logpass
+from validation import validate_login
 from utils import (
+    account_exists_by_logpass,
     update_account_password,
     update_card_details,
     hash_password,
@@ -67,6 +68,7 @@ class CreateAccount(g.Mutation):
     id = g.ID()
 
     async def mutate(self, info, login, password):
+        validate_login(login)
         password = hash_password(password)
         try:
             id = await execute_query('''

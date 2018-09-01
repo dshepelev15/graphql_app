@@ -12,7 +12,7 @@ from utils import (
     account_exists_by_logpass,
     update_account_password,
     update_card_details,
-    # hash_password,
+    hash_password,
 )
 
 
@@ -73,7 +73,8 @@ class CreateAccount(g.Mutation):
 
     async def mutate(self, info, login, password):
         validate_login(login)
-        # password = hash_password(password)
+        password = hash_password(password)
+
         try:
             id = await execute_query('''
                 INSERT INTO account (login, password)

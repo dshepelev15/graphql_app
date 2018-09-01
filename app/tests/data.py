@@ -1,25 +1,26 @@
 import asyncpg
+from utils import hash_password
 from database import (
-    ConnectionConfig,
+    DbConnectionConfig,
     execute_query
 )
 
 
-class DbTestConnectionConfig(ConnectionConfig):
+class TestDbConnectionConfig(DbConnectionConfig):
     POSTGRES_USER = 'graphql_test'
     POSTGRES_PASSWORD = '0dexjkfd2ads1a5c6514b4dec'
     POSTGRES_DATABASE = 'graphql_db_test'
 
 
 def test_execute_query(*args, **kwargs):
-    return execute_query(*args, **kwargs, db_connection=DbTestConnectionConfig)
+    return execute_query(*args, **kwargs, db_connection=TestDbConnectionConfig())
 
 
 async def init_database():
     account_values = [
-        ('account_number1', 'right_password_here'),
-        ('account_number2', 'password_again'),
-        ('test_login', 'test_password')
+        ('account_number1', hash_password('right_password_here')),
+        ('account_number2', hash_password('password_again')),
+        ('test_login', hash_password('test_password'))
     ]
     account_ids = [await test_execute_query('''
         INSERT INTO account (login, password)

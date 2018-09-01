@@ -8,7 +8,7 @@ from validation import (
 
 
 async def account_exists_by_logpass(login, password):
-    # password = hash_password(password)
+    password = hash_password(password)
 
     record = await execute_query('''
             SELECT id, login, password FROM account
@@ -26,7 +26,7 @@ async def update_account_password(login, password, new_password):
     if not is_exist:
         raise GraphQLError('Account does not exist')
 
-    # new_password = hash_password(new_password)
+    new_password = hash_password(new_password)
 
     res = await execute_query('''
         UPDATE account SET password = $2

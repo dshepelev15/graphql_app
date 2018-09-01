@@ -2,6 +2,7 @@ import asyncio
 import aiounittest
 
 from tests.helpers import reinitialize_database
+from utils import hash_password
 from schema import schema
 
 
@@ -90,7 +91,7 @@ class QueryTestCase(aiounittest.AsyncTestCase):
 
         account = res.data['account']
         self.assertEquals(account['login'], login)
-        self.assertEquals(account['password'], password)
+        self.assertEquals(account['password'],  hash_password(password))
 
     async def test_cards_retrieving_by_integer_account_id(self):
         account_id = self.account_ids[0]

@@ -1,7 +1,7 @@
 import asyncio
 import aiounittest
 
-from database import execute_query
+from tests.data import test_execute_query
 from tests.helpers import reinitialize_database
 from schema import schema
 from utils import account_exists_by_logpass
@@ -38,7 +38,7 @@ class MutationTestCase(aiounittest.AsyncTestCase):
         self.assertNotIn(account_id, before)
 
     async def _select_account_ids(self):
-        accounts = await execute_query('SELECT id FROM account', pg_method='fetch')
+        accounts = await test_execute_query('SELECT id FROM account', pg_method='fetch')
         ids = [account['id'] for account in accounts]
 
         return ids
@@ -156,7 +156,7 @@ class MutationTestCase(aiounittest.AsyncTestCase):
         self.assertNotIn(card_id, before)
 
     async def _select_card_ids(self):
-        cards = await execute_query('SELECT id FROM card', pg_method='fetch')
+        cards = await test_execute_query('SELECT id FROM card', pg_method='fetch')
         ids = [card['id'] for card in cards]
 
         return ids

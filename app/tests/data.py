@@ -7,8 +7,6 @@ from database import (
 
 
 class TestDbConnectionConfig(DbConnectionConfig):
-    POSTGRES_USER = 'graphql_test'
-    POSTGRES_PASSWORD = '0dexjkfd2ads1a5c6514b4dec'
     POSTGRES_DATABASE = 'graphql_db_test'
 
 
